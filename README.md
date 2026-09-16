@@ -14,32 +14,32 @@
 ---
 
 ## 📌 Resumen Ejecutivo
-Este proyecto implementa un sistema de visión por computadora en tiempo real capaz de detectar y diagnosticar enfermedades superficiales en tubérculos de papa (como la Sarna Común y Podredumbre Seca). Para superar la limitación del dataset base (Mendeley) que carece de anotaciones de coordenadas, el sistema utiliza una arquitectura de inferencia en dos etapas:
-1. **Detección (YOLO):** Identifica y enmarca el tubérculo en el fotograma de la cámara.
-2. **Clasificación (ResNet18):** Analiza la región extraída (Crop) para emitir el diagnóstico de la enfermedad.
+Este proyecto implementa un sistema de visión por computadora en tiempo real capaz de detectar y diagnosticar enfermedades foliares en plantas (como antracnosis, roya o negrilla). Para aislar la lesión y evitar que el modelo se confunda con elementos del entorno (tierra, manos, otras ramas), el sistema utiliza una arquitectura de inferencia en dos etapas:
+1. **Detección (YOLO):** Identifica y recorta (enmarca) la hoja objetivo dentro del fotograma de la cámara, aislándola del fondo complejo.
+2. **Clasificación (ResNet18):** Analiza únicamente la región extraída de la hoja (Crop) procesando las características de textura y color para emitir el diagnóstico patológico preciso.
 
 ---
 
 ## 🗓️ Plan de Acción y Cronograma (Hitos)
 
-El desarrollo está dividido en fases alineadas a los hitos de evaluación del curso.
+El desarrollo está dividido en fases alineadas a los hitos de evaluación del curso de Percepción Computacional.
 
 ### Fase 1: Datos y Baseline Clásico (Hasta Semana 4 - Checkpoint)
-* [ ] **Descarga y estructuración:** Obtención del dataset de Mendeley.
-* [ ] **EDA (Exploratory Data Analysis):** Análisis de distribución de clases y detección de anomalías (`01_eda.ipynb`).
-* [ ] **Preprocesamiento y Señales:** Extracción de descriptores clásicos como HOG y LBP (`02_preprocesamiento_senales.ipynb`).
-* [ ] **Modelo Base:** Entrenamiento de un pipeline tradicional SVM + HOG como punto de comparación (`03_baseline_clasico.ipynb`).
+* [ ] **Descarga y estructuración:** Obtención y balanceo de un dataset foliar (ej. PlantVillage o repositorio similar de Kaggle).
+* [ ] **EDA (Exploratory Data Analysis):** Análisis de distribución de clases (hojas sanas vs. enfermas) y detección de anomalías de iluminación o fondo (01_eda.ipynb).
+* [ ] **Preprocesamiento y Señales:** Extracción de descriptores clásicos, enfatizando LBP (Local Binary Patterns) para identificar las texturas de las enfermedades, y HOG para la morfología de la hoja (02_preprocesamiento_senales.ipynb).
+* [ ] **Modelo Base:** Entrenamiento de un pipeline tradicional SVM + HOG/LBP como baseline riguroso y punto de comparación histórico (03_baseline_clasico.ipynb).
 
 ### Fase 2: Desarrollo del Pipeline de Dos Etapas (Hasta Semana 7 - Avance 1)
-* [ ] **Etapa 1 (Detección):** Entrenar/ajustar modelo YOLO ligero para detectar la papa en el entorno.
-* [ ] **Etapa 2 (Clasificación):** Entrenar arquitectura CNN (ResNet18) usando el dataset de Mendeley procesado.
-* [ ] **Resultados:** Generar matrices de confusión y análisis de errores sobre el conjunto de prueba aislado.
+* [ ] **Etapa 1 (Detección):** Entrenar/ajustar modelo YOLO ligero para localizar la hoja en el entorno real y eliminar el sesgo visual del fondo.
+* [ ] **Etapa 2 (Clasificación):** Entrenar arquitectura CNN (ej. ResNet18 o MobileNet) usando los recortes (crops) de las hojas para diagnosticar la patología específica.
+* [ ] **Resultados:** Generar matrices de confusión y evaluar métricas robustas al desbalanceo (como el F1-Score) sobre el conjunto de prueba aislado.
 
 ### Fase 3: Integración y Despliegue MLOps (Hasta Semana 14 - Entrega Final)
-* [ ] **Inferencia en vivo:** Integrar YOLO y ResNet con OpenCV para captura en tiempo real (`inferencia_camara.py`).
-* [ ] **API:** Envolver el pipeline en un servicio REST usando FastAPI.
-* [ ] **Contenerización:** Crear `Dockerfile` garantizando compatibilidad con el entorno de ejecución.
-* [ ] **Sustentación:** Grabación del video demo (5-8 min) con el sistema funcionando de extremo a extremo.
+* [ ] **Inferencia en vivo:** Integrar YOLO y ResNet con OpenCV para la captura de video y evaluación de muestras en tiempo real (inferencia_camara.py).
+* [ ] **API:** Envolver el pipeline en un servicio REST usando FastAPI para recibir las imágenes y devolver el diagnóstico patológico.
+* [ ] **Contenerización:** Crear Dockerfile garantizando la compatibilidad con el entorno de ejecución y las dependencias de visión.
+* [ ] **Sustentación:** Grabación del video demo (5-8 min) evidenciando el sistema fito-sanitario funcionando de extremo a extremo (desde la cámara hasta la API).
 
 ---
 
