@@ -1,4 +1,4 @@
-# Sistema Diagnóstico de Enfermedades en Tubérculos de Papa con Percepción Computacional
+# Sistema Diagnóstico de Enfermedades Foliares mediante Percepción Computacional
 
 **Contexto:** Sistema de Percepción Computacional desarrollado para Veltri Software Solutions.
 **Institución:** Universidad Privada Antenor Orrego (UPAO) - Facultad de Ingeniería
