@@ -1,10 +1,23 @@
-# Dependencias para el entorno
-opencv-python
-numpy<2.0.0
-matplotlib
-scikit-image
-scikit-learn
-torch
-torchvision
-Pillow
-tqdm
+# Dependencias estrictamente fijadas para HotPotato
+# Inferencia y Servicio REST
+fastapi==0.115.5
+uvicorn==0.32.1
+python-multipart==0.0.17
+requests==2.32.3
+
+# Deep Learning y Visión por Computadora (PyTorch)
+torch==2.5.1
+torchvision==0.20.1
+pillow==11.0.0
+opencv-python-headless==4.10.0.84
+torchinfo==1.8.0
+
+# Procesamiento Numérico, Machine Learning y Señales
+numpy==1.26.4
+scikit-learn==1.5.2
+scikit-image==0.24.0
+matplotlib==3.9.2
+tqdm==4.67.1
+
+# Gestión del Ciclo de Vida y Experimentos
+mlflow==2.18.0

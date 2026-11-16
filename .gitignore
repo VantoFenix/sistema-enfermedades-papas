@@ -53,6 +53,11 @@ models/*
 *.joblib
 *.model
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
 # OS generated files
 .DS_Store
 .DS_Store?

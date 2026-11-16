@@ -1,7 +1,7 @@
 import os
 import sys
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import pandas_udf, PandasUDFType, col, from_json
+from pyspark.sql.functions import pandas_udf, col, from_json
 from pyspark.sql.types import StringType, StructType, StructField, ArrayType, FloatType
 import pandas as pd
 import torch
@@ -41,43 +41,51 @@ def get_model():
     return _modelo
 
 # ---------------------------------------------------------
-# 2. Inferencia Distribuida con Pandas UDF
+# 2. Inferencia Distribuida con Pandas UDF Vectorizada (Batch)
 # ---------------------------------------------------------
-# Permite usar la API de DataFrames (más rápida por Apache Arrow) en lugar de RDDs.
-@pandas_udf(StringType(), PandasUDFType.SCALAR)
+# Permite usar la API de DataFrames con Apache Arrow y vectorización matricial completa.
+@pandas_udf(StringType())
 def predict_defect_udf(tensor_series: pd.Series) -> pd.Series:
     """
-    Recibe un lote (Batch) de tensores aplanados de Kafka, pasa por la ResNet18
-    y retorna la clase identificada.
+    Recibe un lote (Batch) de tensores aplanados de Kafka, los vectoriza en un
+    solo batch matricial (N, 3, 224, 224) para la ResNet18 y retorna la clase identificada.
     """
     modelo = get_model()
     device = next(modelo.parameters()).device
     
-    predictions = []
+    clases = ['Blackspot Bruising Care', 'Dry Rot Care', 'Healthy Potatoes', 'Soft Rot Care']
+    results = ["Frame_Corrupto"] * len(tensor_series)
+    valid_indices = []
+    valid_arrays = []
     
-    with torch.no_grad():
-        for flat_tensor in tensor_series:
-            if flat_tensor is None:
-                predictions.append("Error_Kafka")
-                continue
-                
-            try:
-                # Reconstruimos la imagen desde el JSON (1 dimensión -> 3x224x224)
-                np_array = np.array(flat_tensor, dtype=np.float32).reshape(3, 224, 224)
-                input_tensor = torch.tensor(np_array).unsqueeze(0).to(device)
-                
-                # Forward Pass
-                output = modelo(input_tensor)
-                _, pred = torch.max(output, 1)
-                
-                clases = ['Blackspot Bruising Care', 'Dry Rot Care', 'Healthy Potatoes', 'Soft Rot Care']
-                predictions.append(clases[pred.item()])
-                
-            except Exception as e:
-                # Tolerancia a Fallos: Evitar que el Pipeline colapse por un frame corrupto
-                predictions.append("Frame_Corrupto")
-                
-    return pd.Series(predictions)
+    for i, flat_tensor in enumerate(tensor_series):
+        if flat_tensor is None:
+            results[i] = "Error_Kafka"
+            continue
+            
+        try:
+            # Reconstruimos la imagen desde el JSON (1 dimensión -> 3x224x224)
+            arr = np.array(flat_tensor, dtype=np.float32).reshape(3, 224, 224)
+            valid_arrays.append(arr)
+            valid_indices.append(i)
+        except Exception:
+            # Tolerancia a Fallos: Evitar que el Pipeline colapse por un frame corrupto
+            results[i] = "Frame_Corrupto"
+            
+    if valid_arrays:
+        # Inferencia matricial vectorizada por batch (N, 3, 224, 224)
+        batch_np = np.stack(valid_arrays, axis=0)
+        batch_tensor = torch.from_numpy(batch_np).to(device)
+        
+        with torch.no_grad():
+            outputs = modelo(batch_tensor)
+            _, preds = torch.max(outputs, dim=1)
+            preds_cpu = preds.cpu().numpy()
+            
+        for batch_idx, orig_idx in enumerate(valid_indices):
+            results[orig_idx] = clases[preds_cpu[batch_idx]]
+            
+    return pd.Series(results)
 
 
 def main():
